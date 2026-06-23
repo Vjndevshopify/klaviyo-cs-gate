@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
   const weekday = parts.weekday;
   const isWeekday = !["Sat", "Sun"].includes(weekday);
   const totalMinutes = hour * 60 + minute;
-  const windowOpen = isWeekday && totalMinutes >= 480 && totalMinutes < 975;
+  const windowOpen = isWeekday && totalMinutes >= 450 && totalMinutes < 870;
 
   const response = await fetch(
     `https://a.klaviyo.com/api/profiles/${id}/`,
