@@ -1,7 +1,27 @@
 import { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const { id } = await req.json();
+  const body = await req.json();
+  const email = body.email;
+
+  // First find the profile ID by email
+  const searchRes = await fetch(
+    `https://a.klaviyo.com/api/profiles/?filter=equals(email,"${email}")`,
+    {
+      headers: {
+        accept: "application/json",
+        revision: "2024-02-15",
+        Authorization: `Klaviyo-API-Key ${process.env.KLAVIYO_PRIVATE_KEY}`,
+      },
+    }
+  );
+
+  const searchData = await searchRes.json();
+  const id = searchData?.data?.[0]?.id;
+
+  if (!id) {
+    return Response.json({ error: "Profile not found" }, { status: 404 });
+  }
 
   const now = new Date();
   const ptFormatter = new Intl.DateTimeFormat("en-US", {
@@ -21,10 +41,7 @@ export async function POST(req: NextRequest) {
   const weekday = parts.weekday;
   const isWeekday = !["Sat", "Sun"].includes(weekday);
   const totalMinutes = hour * 60 + minute;
-
-  // 8:00am = 480mins, 4:15pm = 975mins (buffered to absorb ~40min flow delay)
-  const windowOpen =
-    isWeekday && totalMinutes >= 480 && totalMinutes < 975;
+  const windowOpen = isWeekday && totalMinutes >= 480 && totalMinutes < 975;
 
   const response = await fetch(
     `https://a.klaviyo.com/api/profiles/${id}/`,
